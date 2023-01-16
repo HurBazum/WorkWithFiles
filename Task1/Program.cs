@@ -16,7 +16,7 @@ namespace WorkWithFiles
                 }
                 else
                 {
-                    throw new Exception();
+                    throw new DirectoryNotFoundException();
                 }
             }
             catch (Exception ex)
@@ -61,7 +61,7 @@ namespace WorkWithFiles
                         Console.WriteLine($"Папка {directory} время последнего доступа {lastAccessAt}");
                         Console.WriteLine($"прошло больше {deleteTime.Minutes} минут c последнего доступа, - {directory} надо удалять");
                         directory.Delete(true);
-                        continue;//для перехода к следующей директории после удаления данной, т.к. DeleteFiles(directory) расположен ниже
+                        continue;//для перехода к следующей директории после удаления данной, т.к. DeleteOldFoldersAndFiles(directory) расположен ниже
                     }
                     else
                     {
