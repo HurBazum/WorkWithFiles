@@ -12,8 +12,6 @@ namespace Task2
         {
             try
             {
-                /// file:///C:/Games/srlzbl/testFolderNew
-                // пример ссылки - file:///C:/Games/Gothic%202%20NB%20Mod%20Installer
                 string s = string.Empty;
                 Console.WriteLine("Введите URL папки(вместо пробелов вводится - %20): ");
                 s = Console.ReadLine();
