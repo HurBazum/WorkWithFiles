@@ -1,9 +1,10 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
+using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using static System.Net.WebRequestMethods;
 
-namespace WorkWithFiles
+namespace Task2
 {
     class Program
     {
@@ -11,27 +12,38 @@ namespace WorkWithFiles
         {
             try
             {
-                // file:///C:/GOG%20Games/Gothic%202%20Gold/
-                // %20 - указывается вместо пробела в ссылке
-                //"file:///C:/Games/srlzbl/Pharaoh/Audio"
-                // file:///C:/GOG%20Games/Gothic%202%20Gold/saves/current
+                /// file:///C:/Games/srlzbl/testFolderNew
+                // пример ссылки - file:///C:/Games/Gothic%202%20NB%20Mod%20Installer
                 string s = string.Empty;
-                long directorySize = 0;
-                Console.WriteLine("Введите урл папки(вместо пробелов вводится - %20): ");
+                Console.WriteLine("Введите URL папки(вместо пробелов вводится - %20): ");
                 s = Console.ReadLine();
+
                 ///<summary> 
                 ///Проверка верна ли введена ссылка e.g. "file:///C:/" - ок, "file:///C:" - не ок,
                 ///при неверном вводе выбрасывается исключение
                 ///</summary>
+                
                 if(!Regex.IsMatch(s, @"file:\/\/\/\w{1}\:[\/\w\/]+"))
                 {
-                    throw new Exception("Неверно указана ссылка!\nНеобходимо начинать с file:// и название диска заключать в - /.../");
+                    throw new Exception("Неверно указана ссылка!\nНеобходимо начинать с file:// и название диска заключать в - /.../\n" +
+                        "пример правильного ввода - file:///C:/");
                 }
-                string newS = new string(s.Substring(8));
-                if(Directory.Exists(newS)) 
-                    Console.WriteLine((GetSize(s, ref directorySize) + " - размер данной директории."));
+
+                ///<summary>
+                /// проверка наличия директории по заданному пути,
+                /// чтоб не выводилось "0 - размер данной директории"
+                /// после выброшенной методом GetSize(s) ошибки, 
+                /// а просто выводилось сообщение об ошибке
+                ///</summary>
+
+                if (Directory.Exists(s.Replace("%20", " ").Substring(8)))
+                {
+                    Console.WriteLine((GetSize(s) + " - размер данной директории."));
+                }
                 else
+                {
                     throw new DirectoryNotFoundException();
+                }
             }
             catch (Exception ex)
             {
@@ -39,10 +51,11 @@ namespace WorkWithFiles
                 Console.WriteLine(ex.HelpLink);
             }
         }
-        static long GetSize(string s, ref long size)
+        static long GetSize(string s)
         {
             Uri uri = new Uri(s);
             DirectoryInfo di = new DirectoryInfo(uri.LocalPath);
+            long size = 0;
             try
             {
                 if (di.Exists)
@@ -56,7 +69,7 @@ namespace WorkWithFiles
                     DirectoryInfo[] directoryInfos = di.GetDirectories();
                     foreach (DirectoryInfo directoryInfo in directoryInfos)
                     {
-                        GetSize(directoryInfo.FullName, ref size);
+                        size += GetSize(directoryInfo.FullName);
                     }
                 }
                 else
@@ -65,6 +78,11 @@ namespace WorkWithFiles
                 }
             }
             catch(DirectoryNotFoundException ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.HelpLink);
+            }
+            catch(AccessViolationException ex)
             {
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.HelpLink);

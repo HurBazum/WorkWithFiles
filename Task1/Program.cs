@@ -1,6 +1,6 @@
 ﻿using System.Security.AccessControl;
 
-namespace WorkWithFiles
+namespace Task1
 {
     class Program
     {
@@ -8,11 +8,11 @@ namespace WorkWithFiles
         {
             try
             {
-                string path = @"C:\\testFolders";
+                string path = @"C:\Games\srlzbl\testFolderNew";
                 DirectoryInfo directoryInfo = new DirectoryInfo(path);
                 if (directoryInfo.Exists)
                 { 
-                    DeleteOldFoldersAndFiles(directoryInfo);
+                    DeleteOldFoldersAndFiles(directoryInfo, 1);
                 }
                 else
                 {
@@ -25,10 +25,13 @@ namespace WorkWithFiles
                 Console.WriteLine(ex.HelpLink);
             }
         }
-        static void DeleteOldFoldersAndFiles(DirectoryInfo directoryInfo)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="directoryInfo"></param>
+        /// <param name="lastAccesAt">решил сделать его с возможностью измения</param>
+        static void DeleteOldFoldersAndFiles(DirectoryInfo directoryInfo, int lastAccesAt = 30)
         {
-            DateTime lastAccessAt;
-            TimeSpan deleteTime = TimeSpan.FromMinutes(30);
             //удаляются объекты в папке
             var directoryFiles = directoryInfo.GetFiles();
             var directoryFolders = directoryInfo.GetDirectories();
@@ -37,39 +40,20 @@ namespace WorkWithFiles
                 //сканирует файлы в папке, удаляет те, к которым обращались более 30 минут назад
                 foreach (var file in directoryFiles)
                 {
-                    lastAccessAt = file.LastAccessTime;
-                    if (DateTime.Now - lastAccessAt > deleteTime)
+                    if (DateTime.Now - file.LastAccessTime > TimeSpan.FromMinutes(lastAccesAt))
                     {
-                        Console.WriteLine($"файл {file} время последнего доступа {lastAccessAt}");
-                        Console.WriteLine($"прошло больше {deleteTime.Minutes} минут c последнего доступа, - {file} надо удалять");
                         file.Delete();
-                    }
-                    else
-                    {
-                        Console.WriteLine($"файл {file} время последнего доступа {lastAccessAt}");
-                        Console.WriteLine($"прошло меньше {deleteTime.Minutes} минут c последнего доступа," +
-                            $" - {file} не надо удалять");
                     }
                 }
                 //сканирует папки, удаляет те, к которым обращались более 30 минут назад, со всем содержимым
                 //если это не так переходит к предыдущему блоку и сканирует все файлы в текущей директории
                 foreach (var directory in directoryFolders)
                 {
-                    lastAccessAt = directory.LastAccessTime;
-                    if (DateTime.Now - lastAccessAt > deleteTime)
-                    {
-                        Console.WriteLine($"Папка {directory} время последнего доступа {lastAccessAt}");
-                        Console.WriteLine($"прошло больше {deleteTime.Minutes} минут c последнего доступа, - {directory} надо удалять");
-                        directory.Delete(true);
-                        continue;//для перехода к следующей директории после удаления данной, т.к. DeleteOldFoldersAndFiles(directory) расположен ниже
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Папка {directory} время последнего доступа {lastAccessAt}");
-                        Console.WriteLine($"прошло меньше {deleteTime.Minutes} минут c последнего доступа," +
-                            $" - {directory} не надо удалять");
-                    }
                     DeleteOldFoldersAndFiles(directory);
+                    if (DateTime.Now - Directory.GetLastAccessTime(directory.FullName) > TimeSpan.FromMinutes(lastAccesAt))
+                    {
+                        directory.Delete(true);
+                    }
                 }
             }
             catch (Exception ex)
